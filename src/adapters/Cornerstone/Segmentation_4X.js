@@ -272,7 +272,7 @@ function generateToolState(
     imageIds,
     arrayBuffer,
     metadataProvider,
-    skipOverlapping = false
+    skipOverlapping = true
 ) {
     const dicomData = DicomMessage.readFile(arrayBuffer);
     const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
@@ -659,7 +659,7 @@ function checkSEGsOverlapping(
             break;
         }
 
-        const segmentIndex = getSegmentIndex(multiframe);
+        const segmentIndex = getSegmentIndex(multiframe, i);
 
         let SourceImageSequence;
 
@@ -775,7 +775,7 @@ function insertOverlappingPixelDataPlanar(
             const PerFrameFunctionalGroups =
                 PerFrameFunctionalGroupsSequence[i];
 
-            const segmentIndex = getSegmentIndex(multiframe);
+            const segmentIndex = getSegmentIndex(multiframe, i);
 
             if (segmentIndex !== segmentIndexToProcess) {
                 continue;
@@ -891,17 +891,17 @@ function insertOverlappingPixelDataPlanar(
     }
 }
 
-const getSegmentIndex = multiframe => {
+function getSegmentIndex(multiframe, frame) {
     const {
         SharedFunctionalGroupsSequence,
         PerFrameFunctionalGroupsSequence
     } = multiframe;
-    return PerFrameFunctionalGroupsSequence.SegmentIdentificationSequence
-        ? PerFrameFunctionalGroupsSequence.SegmentIdentificationSequence
+    return PerFrameFunctionalGroupsSequence[frame].SegmentIdentificationSequence
+        ? PerFrameFunctionalGroupsSequence[frame].SegmentIdentificationSequence
               .ReferencedSegmentNumber
         : SharedFunctionalGroupsSequence.SegmentIdentificationSequence
               .ReferencedSegmentNumber;
-};
+}
 
 function insertPixelDataPlanar(
     segmentsOnFrame,
@@ -958,7 +958,7 @@ function insertPixelDataPlanar(
             break;
         }
 
-        const segmentIndex = getSegmentIndex(multiframe);
+        const segmentIndex = getSegmentIndex(multiframe, i);
 
         let SourceImageSequence;
 
